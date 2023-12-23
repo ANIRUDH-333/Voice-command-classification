@@ -1,5 +1,6 @@
 streamlit
 google-generativeai
 python-dotenv
-
+SpeechRecognition=3.10.1
+PyAudio=0.2.14
 
