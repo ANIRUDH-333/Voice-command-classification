@@ -3,6 +3,7 @@ import os
 import streamlit as st
 import google.generativeai as genai
 import speech_recognition as sr
+import roslibpy
 
 # Load environment variables
 load_dotenv()
@@ -28,6 +29,14 @@ def speech_to_text():
         except sr.RequestError as e:
             return "Could not request results from Google Speech Recognition service; {0}".format(e)
 
+def publish(data):
+    client = roslibpy.Ros(host='localhost', port=9090)
+    client.run()
+
+    talker = roslibpy.Topic(client, '/keyboard_input', 'std_msgs/String')
+    talker.publish(roslibpy.Message({'data': data}))
+
+
 system_prompt = "You are a best classifier for 4 classes. Based on the context, you have to classify if it FORWARD, BACKWARD, RIGHT, LEFT. Finally, your response should only be a one word which is one of these: FORWARD, BACKWARD, RIGHT, LEFT. The following is the content on which you have to classify:"
 # Create button for voice command
 if st.button('Press and Speak'):
@@ -38,7 +47,19 @@ if st.button('Press and Speak'):
     # Use the transcribed text
     response = model.generate_content(system_prompt + audio_text)
     # Display the generated content in a text area
-    st.text(response.text)
+    
+    st.text(f"Publishing : {response.text}")
+    
+    if response.text == "FORWARD":
+        publish("up")
+    elif response.text == "BACKWARD":
+        publish("down")
+    elif response.text == "RIGHT":
+        publish("right")
+    elif response.text == "LEFT":
+        publish("left")
+    else:
+        st.text("Can you come again...")
 
 
 # Initialize session states
